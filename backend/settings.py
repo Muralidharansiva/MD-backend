@@ -35,7 +35,11 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-9gv=+1kdc@$f2tin3ao
 DEBUG = env_bool("DJANGO_DEBUG", True)
 TESTING = "test" in sys.argv
 
-BASE_ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+BASE_ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "md-backend-sz0v.onrender.com",
+]
 BASE_CORS_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://localhost:5173",
@@ -43,6 +47,8 @@ BASE_CORS_ORIGINS = [
     "http://localhost:5174",
     "http://127.0.0.1:3000",
     "http://localhost:3000",
+    "https://md-studio-xi.vercel.app",
+    "https://md-backend-sz0v.onrender.com",
 ]
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", BASE_ALLOWED_HOSTS)
