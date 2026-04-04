@@ -1,0 +1,1 @@
+web: gunicorn dinesh_backend.wsgi
