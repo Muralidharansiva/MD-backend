@@ -1,5 +1,6 @@
 ﻿from django.conf import settings
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication, get_authorization_header
+from rest_framework.exceptions import AuthenticationFailed
 
 
 class CookieTokenAuthentication(TokenAuthentication):
@@ -17,4 +18,9 @@ class CookieTokenAuthentication(TokenAuthentication):
             return None
 
         self.enforce_csrf(request)
-        return self.authenticate_credentials(token_key)
+        try:
+            return self.authenticate_credentials(token_key)
+        except AuthenticationFailed:
+            # Treat stale or revoked cookies as an anonymous session so
+            # public pages like login/register do not fail with "Invalid token."
+            return None

@@ -27,6 +27,14 @@ class AuthAPITests(APITestCase):
         self.assertEqual(response.data["user"]["role"], UserProfile.Role.CLIENT)
         self.assertIn("mdstudio_auth", response.cookies)
 
+    def test_public_auth_routes_ignore_stale_invalid_cookie(self):
+        self.client.cookies["mdstudio_auth"] = "stale-invalid-token"
+
+        response = self.client.get(reverse("auth-me"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["authenticated"], False)
+
     def test_client_can_login_with_client_role(self):
         client = User.objects.create_user(username="clientlogin", email="clientlogin@example.com", password="studio-pass-123")
         client.profile.role = UserProfile.Role.CLIENT
