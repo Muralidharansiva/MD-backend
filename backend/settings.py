@@ -32,7 +32,8 @@ def env_list(name, default):
 
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-9gv=+1kdc@$f2tin3aols9+kz=yzaxwk6h-gw6qs2nfkza^ssq")
-DEBUG = env_bool("DJANGO_DEBUG", True)
+IS_RENDER = bool(os.getenv("RENDER")) or bool(os.getenv("RENDER_EXTERNAL_HOSTNAME"))
+DEBUG = env_bool("DJANGO_DEBUG", not IS_RENDER)
 TESTING = "test" in sys.argv
 
 BASE_ALLOWED_HOSTS = [
