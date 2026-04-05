@@ -1,4 +1,9 @@
-﻿from django.contrib.auth import get_user_model
+import os
+from unittest.mock import patch
+
+from django.contrib.auth import get_user_model
+from django.core.management import call_command
+from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -218,3 +223,51 @@ class AuthAPITests(APITestCase):
         )
         self.assertEqual(verify_response.status_code, status.HTTP_200_OK)
         self.assertTrue(User.objects.filter(username="otpnewclient").exists())
+
+
+class DeployAdminBootstrapTests(TestCase):
+    def test_bootstrap_admin_creates_superuser_and_owner_profile(self):
+        env = {
+            "DEPLOY_ADMIN_USERNAME": "murali",
+            "DEPLOY_ADMIN_PASSWORD": "StudioAdmin!123",
+            "DEPLOY_ADMIN_EMAIL": "murali@example.com",
+            "DEPLOY_ADMIN_ENABLE_OWNER": "true",
+        }
+
+        with patch.dict(os.environ, env, clear=False):
+            call_command("bootstrap_admin")
+
+        user = User.objects.get(username="murali")
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.check_password("StudioAdmin!123"))
+        self.assertEqual(user.email, "murali@example.com")
+        self.assertEqual(user.profile.role, UserProfile.Role.OWNER)
+        self.assertTrue(user.profile.can_access_owner_portal)
+
+    def test_bootstrap_admin_updates_existing_user(self):
+        user = User.objects.create_user(username="murali", email="old@example.com", password="old-pass")
+        user.is_staff = False
+        user.is_superuser = False
+        user.save()
+        user.profile.role = UserProfile.Role.CLIENT
+        user.profile.can_access_owner_portal = False
+        user.profile.save()
+
+        env = {
+            "DEPLOY_ADMIN_USERNAME": "murali",
+            "DEPLOY_ADMIN_PASSWORD": "NewStudioAdmin!123",
+            "DEPLOY_ADMIN_EMAIL": "new@example.com",
+            "DEPLOY_ADMIN_ENABLE_OWNER": "true",
+        }
+
+        with patch.dict(os.environ, env, clear=False):
+            call_command("bootstrap_admin")
+
+        user.refresh_from_db()
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.check_password("NewStudioAdmin!123"))
+        self.assertEqual(user.email, "new@example.com")
+        self.assertEqual(user.profile.role, UserProfile.Role.OWNER)
+        self.assertTrue(user.profile.can_access_owner_portal)
