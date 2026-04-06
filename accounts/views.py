@@ -1,4 +1,4 @@
-﻿from django.conf import settings
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.middleware.csrf import get_token
@@ -36,6 +36,38 @@ from .throttles import LoginRateThrottle, OTPRequestRateThrottle, OTPVerifyRateT
 User = get_user_model()
 
 
+def apply_auth_cookie(response, token_key):
+    cookie_kwargs = {
+        "httponly": settings.AUTH_COOKIE_HTTPONLY,
+        "secure": settings.AUTH_COOKIE_SECURE,
+        "samesite": settings.AUTH_COOKIE_SAMESITE,
+        "path": settings.AUTH_COOKIE_PATH,
+    }
+    if getattr(settings, "AUTH_COOKIE_PARTITIONED", False):
+        try:
+            response.set_cookie(settings.AUTH_COOKIE_NAME, token_key, partitioned=True, **cookie_kwargs)
+            return response
+        except TypeError:
+            pass
+    response.set_cookie(settings.AUTH_COOKIE_NAME, token_key, **cookie_kwargs)
+    return response
+
+
+def delete_auth_cookie(response):
+    delete_kwargs = {
+        "path": settings.AUTH_COOKIE_PATH,
+        "samesite": settings.AUTH_COOKIE_SAMESITE,
+    }
+    if getattr(settings, "AUTH_COOKIE_PARTITIONED", False):
+        try:
+            response.delete_cookie(settings.AUTH_COOKIE_NAME, partitioned=True, **delete_kwargs)
+            return response
+        except TypeError:
+            pass
+    response.delete_cookie(settings.AUTH_COOKIE_NAME, **delete_kwargs)
+    return response
+
+
 def build_auth_response(user, message, status_code=status.HTTP_200_OK):
     token, _ = Token.objects.get_or_create(user=user)
     response = Response(
@@ -45,24 +77,11 @@ def build_auth_response(user, message, status_code=status.HTTP_200_OK):
         },
         status=status_code,
     )
-    response.set_cookie(
-        settings.AUTH_COOKIE_NAME,
-        token.key,
-        httponly=settings.AUTH_COOKIE_HTTPONLY,
-        secure=settings.AUTH_COOKIE_SECURE,
-        samesite=settings.AUTH_COOKIE_SAMESITE,
-        path=settings.AUTH_COOKIE_PATH,
-    )
-    return response
+    return apply_auth_cookie(response, token.key)
 
 
 def clear_auth_cookie(response):
-    response.delete_cookie(
-        settings.AUTH_COOKIE_NAME,
-        path=settings.AUTH_COOKIE_PATH,
-        samesite=settings.AUTH_COOKIE_SAMESITE,
-    )
-    return response
+    return delete_auth_cookie(response)
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
