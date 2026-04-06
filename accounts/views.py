@@ -1,4 +1,4 @@
-from django.conf import settings
+﻿from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.middleware.csrf import get_token
@@ -319,3 +319,4 @@ class OwnerDashboardAPIView(APIView):
                 "recent_notifications": recent_notifications,
             }
         )
+

@@ -106,7 +106,7 @@ def mark_otp_used(challenge):
 def notify_booking_created(booking):
     destination = booking.user.email if booking.user and booking.user.email else f"Phone: {booking.phone}"
     message = (
-        f"Your MD Studio booking for {booking.service_type} on {booking.date} at {booking.time} was created successfully. "
+        f"Your MD Studio booking for {booking.service_type} on {booking.date} at {booking.time_label} was created successfully. "
         f"Current status: {booking.get_status_display()}."
     )
     return send_business_notification(
@@ -121,7 +121,7 @@ def notify_booking_created(booking):
 def notify_booking_status_change(booking):
     destination = booking.user.email if booking.user and booking.user.email else f"Phone: {booking.phone}"
     message = (
-        f"Your MD Studio booking for {booking.service_type} on {booking.date} at {booking.time} was updated. "
+        f"Your MD Studio booking for {booking.service_type} on {booking.date} at {booking.time_label} was updated. "
         f"New status: {booking.get_status_display()}."
     )
     return send_business_notification(
@@ -131,3 +131,4 @@ def notify_booking_status_change(booking):
         message=message,
         related_booking_id=booking.id,
     )
+

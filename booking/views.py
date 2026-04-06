@@ -19,6 +19,7 @@ from .serializers import (
     SLOT_END,
     SLOT_INTERVAL_MINUTES,
     SLOT_START,
+    format_time_12h,
 )
 
 
@@ -71,7 +72,7 @@ class BookingAvailabilityAPIView(APIView):
             slots.append(
                 {
                     "value": current.strftime("%H:%M:%S"),
-                    "label": current.strftime("%H:%M"),
+                    "label": format_time_12h(slot_time),
                     "is_booked": is_booked,
                     "is_locked": is_locked,
                     "is_available": not is_booked and not is_locked,
@@ -229,3 +230,5 @@ class OwnerBookingStatusUpdateAPIView(generics.UpdateAPIView):
         )
         notify_booking_status_change(booking)
         return response
+
+

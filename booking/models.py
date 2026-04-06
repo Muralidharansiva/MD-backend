@@ -44,6 +44,10 @@ class Booking(models.Model):
     def __str__(self):
         return f"{self.customer_name} - {self.service_type} on {self.date}"
 
+    @property
+    def time_label(self):
+        return self.time.strftime("%I:%M %p").lstrip("0")
+
     def clean(self):
         exists = Booking.objects.exclude(id=self.id).filter(
             date=self.date,
@@ -84,4 +88,9 @@ class BookingSlotLock(models.Model):
 
     def __str__(self):
         return f"Lock {self.date} {self.time} for {self.user}"
+
+    @property
+    def time_label(self):
+        return self.time.strftime("%I:%M %p").lstrip("0")
+
 

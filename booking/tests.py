@@ -164,3 +164,4 @@ class BookingAPITests(APITestCase):
             **self.csrf_headers(),
         )
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+

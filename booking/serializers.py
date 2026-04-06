@@ -24,9 +24,14 @@ def generate_slot_values():
 VALID_SLOT_VALUES = {slot.strftime("%H:%M:%S") for slot in generate_slot_values()}
 
 
+def format_time_12h(value):
+    return value.strftime("%I:%M %p").lstrip("0")
+
+
 class BookingSerializer(serializers.ModelSerializer):
     status_label = serializers.CharField(source="get_status_display", read_only=True)
     user_name = serializers.SerializerMethodField(read_only=True)
+    time_label = serializers.CharField(read_only=True)
     lock_token = serializers.UUIDField(write_only=True, required=False)
 
     class Meta:
@@ -40,6 +45,7 @@ class BookingSerializer(serializers.ModelSerializer):
             "service_type",
             "date",
             "time",
+            "time_label",
             "brief",
             "status",
             "status_label",
@@ -47,7 +53,7 @@ class BookingSerializer(serializers.ModelSerializer):
             "created_at",
             "lock_token",
         ]
-        read_only_fields = ["status", "status_label", "owner_notes", "created_at", "user_name"]
+        read_only_fields = ["status", "status_label", "owner_notes", "created_at", "user_name", "time_label"]
 
     def get_user_name(self, obj):
         if obj.user:
@@ -56,12 +62,14 @@ class BookingSerializer(serializers.ModelSerializer):
         return obj.customer_name
 
     def validate_phone(self, value):
+        value = value.strip()
         if not value or not value.isdigit() or len(value) < 10 or len(value) > 15:
             raise serializers.ValidationError("Enter a valid phone number.")
         return value
 
     def validate_service_type(self, value):
-        if len(value.strip()) < 3:
+        value = value.strip()
+        if len(value) < 3:
             raise serializers.ValidationError("Service name must be at least 3 characters.")
         return value
 
@@ -126,3 +134,4 @@ class BookingStatusUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = ["id", "status", "status_label", "owner_notes"]
+

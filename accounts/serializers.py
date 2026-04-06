@@ -59,12 +59,14 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
         fields = ["email", "first_name", "last_name", "phone"]
 
     def validate_email(self, value):
+        value = value.strip().lower()
         user = self.instance
         if User.objects.filter(email__iexact=value).exclude(pk=user.pk).exists():
             raise serializers.ValidationError("An account with this email already exists.")
         return value
 
     def validate_phone(self, value):
+        value = value.strip()
         if value and (not value.isdigit() or len(value) < 10 or len(value) > 15):
             raise serializers.ValidationError("Enter a valid phone number.")
         return value
@@ -91,23 +93,32 @@ class ClientRegisterSerializer(serializers.ModelSerializer):
         fields = ["username", "email", "password", "first_name", "last_name", "phone"]
 
     def validate_username(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("Username is required.")
         if User.objects.filter(username__iexact=value).exists():
             raise serializers.ValidationError("An account with this username already exists.")
         return value
 
     def validate_email(self, value):
+        value = value.strip().lower()
         if User.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError("An account with this email already exists.")
         return value
 
     def validate_phone(self, value):
+        value = value.strip()
         if not value.isdigit() or len(value) < 10 or len(value) > 15:
             raise serializers.ValidationError("Enter a valid phone number.")
         return value
 
     def create(self, validated_data):
-        phone = validated_data.pop("phone", "")
+        phone = validated_data.pop("phone", "").strip()
         password = validated_data.pop("password")
+        validated_data["username"] = validated_data["username"].strip()
+        validated_data["email"] = validated_data["email"].strip().lower()
+        validated_data["first_name"] = validated_data.get("first_name", "").strip()
+        validated_data["last_name"] = validated_data.get("last_name", "").strip()
         user = User.objects.create_user(password=password, **validated_data)
         user.profile.role = UserProfile.Role.CLIENT
         user.profile.phone = phone
@@ -222,3 +233,4 @@ class OTPVerifySerializer(serializers.Serializer):
             raise serializers.ValidationError({"code": "Invalid OTP code."})
         attrs["challenge"] = challenge
         return attrs
+

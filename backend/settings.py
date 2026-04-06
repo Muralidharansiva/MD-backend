@@ -1,4 +1,4 @@
-import os
+﻿import os
 import sys
 from pathlib import Path
 
@@ -102,6 +102,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backend.wsgi.application"
 
+DATABASE_URL = os.getenv("DATABASE_URL")
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -109,8 +111,10 @@ DATABASES = {
     }
 }
 
-if os.getenv("DATABASE_URL") and dj_database_url is not None:
+if DATABASE_URL and dj_database_url is not None:
     DATABASES["default"] = dj_database_url.config(conn_max_age=600, ssl_require=not DEBUG)
+elif IS_RENDER and not TESTING:
+    raise RuntimeError("DATABASE_URL must be set for the Render deployment so live accounts and bookings are stored in Postgres.")
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -198,3 +202,4 @@ REST_FRAMEWORK = {
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
